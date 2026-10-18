@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          path: src/attracts_description
+          path: src/rabbits_description
 
       - name: Install rosdeps
         shell: bash
@@ -37,13 +37,13 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon build --packages-up-to attracts_description --event-handlers=console_cohesion+
+          colcon build --packages-up-to rabbits_description --event-handlers=console_cohesion+
 
       - name: colcon test
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon test --packages-select attracts_description --event-handlers=console_direct+
+          colcon test --packages-select rabbits_description --event-handlers=console_direct+
           colcon test-result --verbose
 
       - name: Upload test logs on failure

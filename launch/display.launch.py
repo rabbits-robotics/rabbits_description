@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 import os
 import xacro
 
-share_dir_path = os.path.join(get_package_share_directory('attracts_description'))
+share_dir_path = os.path.join(get_package_share_directory('rabbits_description'))
 xacro_path = os.path.join(share_dir_path, 'urdf', 'proto1.xacro')
 urdf_path = os.path.join(share_dir_path, 'urdf', 'proto1.urdf')
 

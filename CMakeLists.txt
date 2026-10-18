@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(attracts_description)
+project(rabbits_description)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)

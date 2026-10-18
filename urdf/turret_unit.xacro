@@ -5,7 +5,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://attracts_description/meshes/turret_unit.dae" scale="0.01 0.01 0.01"/>
+          <mesh filename="package://rabbits_description/meshes/turret_unit.dae" scale="0.01 0.01 0.01"/>
         </geometry>
       </visual>
 
