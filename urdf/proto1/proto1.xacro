@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot name="proto1" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:include filename="$(find rabbits_description)/urdf/mobile_base.xacro" />
-  <xacro:include filename="$(find rabbits_description)/urdf/wheel.xacro" />
-  <xacro:include filename="$(find rabbits_description)/urdf/turret_base.xacro" />
-  <xacro:include filename="$(find rabbits_description)/urdf/turret_unit.xacro" />
+  <xacro:include filename="$(find rabbits_description)/urdf/proto1/mobile_base.xacro" />
+  <xacro:include filename="$(find rabbits_description)/urdf/proto1/wheel.xacro" />
+  <xacro:include filename="$(find rabbits_description)/urdf/proto1/turret_base.xacro" />
+  <xacro:include filename="$(find rabbits_description)/urdf/proto1/turret_unit.xacro" />
 
   <xacro:mobile_base />
 

@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+  gamma の首 3 軸（寸法は仮。CAD 確認後に差し替え）。
+  yaw_joint（z、continuous）→ pitch_joint（y、revolute）→ roll_joint（x、revolute）→ camera_link（固定。IMU とカメラ）。
+  pitch / roll は論理関節（ファームが差動リンクの 2 モータ角から求めた値）。ロール軸を後回しにする間は 0 が来る。
+  符号は REP-103: yaw 左が正、pitch 前が下がると正、roll 右が下がると正。
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="gamma_neck" params="mount_z yaw_height pitch_offset camera_offset">
+    <joint name="yaw_joint" type="continuous">
+      <parent link="base_link" />
+      <child link="yaw_link" />
+      <origin xyz="0 0 ${mount_z}" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+    </joint>
+    <link name="yaw_link">
+      <visual>
+        <origin xyz="0 0 ${yaw_height / 2}" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.04" length="${yaw_height}" />
+        </geometry>
+        <material name="rabbits_orange" />
+      </visual>
+    </link>
+
+    <joint name="pitch_joint" type="revolute">
+      <parent link="yaw_link" />
+      <child link="pitch_link" />
+      <origin xyz="0 0 ${yaw_height}" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit lower="${-pi / 12}" upper="${pi / 6}" effort="5" velocity="10" />
+    </joint>
+    <link name="pitch_link">
+      <visual>
+        <origin xyz="${pitch_offset / 2} 0 0" rpy="0 ${pi / 2} 0" />
+        <geometry>
+          <cylinder radius="0.02" length="${pitch_offset}" />
+        </geometry>
+        <material name="rabbits_orange" />
+      </visual>
+    </link>
+
+    <joint name="roll_joint" type="revolute">
+      <parent link="pitch_link" />
+      <child link="roll_link" />
+      <origin xyz="${pitch_offset} 0 0" rpy="0 0 0" />
+      <axis xyz="1 0 0" />
+      <limit lower="${-pi / 6}" upper="${pi / 6}" effort="5" velocity="10" />
+    </joint>
+    <link name="roll_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.04 0.08 0.04" />
+        </geometry>
+        <material name="rabbits_orange" />
+      </visual>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+      <parent link="roll_link" />
+      <child link="camera_link" />
+      <origin xyz="${camera_offset} 0 0" rpy="0 0 0" />
+    </joint>
+    <link name="camera_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.02 0.03 0.02" />
+        </geometry>
+        <material name="rabbits_dark" />
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>

@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="wheel" params="prefix suffix">
-    <link name="${prefix}_${suffix}_wheel">
+  <xacro:macro name="turret_base">
+    <link name="yaw_link">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://rabbits_description/meshes/wheel.dae" scale="0.01 0.01 0.01" />
+          <mesh filename="package://rabbits_description/meshes/proto1/turret_base.dae" scale="0.01 0.01 0.01"/>
         </geometry>
       </visual>
 
       <!-- <collision>
-        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
       </collision> -->
 
       <inertial>

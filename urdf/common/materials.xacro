@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- 機体をまたいで使う色の定義 -->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <material name="rabbits_grey">
+    <color rgba="0.55 0.55 0.6 1.0" />
+  </material>
+  <material name="rabbits_blue">
+    <color rgba="0.2 0.4 0.9 1.0" />
+  </material>
+  <material name="rabbits_orange">
+    <color rgba="0.95 0.55 0.1 1.0" />
+  </material>
+  <material name="rabbits_dark">
+    <color rgba="0.15 0.15 0.15 1.0" />
+  </material>
+</robot>

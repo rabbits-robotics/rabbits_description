@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="turret_unit">
-    <link name="pitch_link">
+  <xacro:macro name="mobile_base">
+    <link name="base_link">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://rabbits_description/meshes/turret_unit.dae" scale="0.01 0.01 0.01"/>
+          <mesh filename="package://rabbits_description/meshes/proto1/mobile_base.dae" scale="0.01 0.01 0.01"/>
         </geometry>
       </visual>
 

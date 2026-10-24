@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+  gamma の脚 1 本 + 車輪（寸法は仮。CAD 確認後に差し替え）。
+  関節の規約（設計書 rabbits_sim docs/superpowers/specs/2026-10-24-gamma-sim-design.md 5 章）:
+  - 脚の関節（<prefix>_leg_joint）: 原点は胴体の下面、方位角 azimuth の半径 radius の位置。
+    関節フレームの x = 半径方向外向き、y = 接線方向（z × x）、z = 上。回転軸は y。
+    角度 0 で腕は水平に外へ伸び、角度が増えると腕の先（車輪）が下がる = 車体が上がる。
+  - 車輪の関節（<prefix>_wheel_joint）: 車輪リンクの z 軸が回転軸で、z 正が機体の外側（半径方向）。
+  - ナックル（<prefix>_knuckle_joint）: 腕の先で −1 倍の mimic。平行リンクの「車輪の向きが胴体と平行のまま
+    上下する」振る舞いを表す。joint_states には載せない（robot_state_publisher が leg_joint から計算する）。
+  本物は平行リンクで、CAD で L / θ0 / r が分かったら 2 本目の腕も足して平行四辺形にする。
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="gamma_leg" params="prefix azimuth radius mount_z arm_length arm_radius wheel_radius wheel_width">
+    <!-- 脚（腕）。関節フレームは z 回りに azimuth だけ回し、x を半径方向外向きにする -->
+    <joint name="${prefix}_leg_joint" type="revolute">
+      <parent link="base_link" />
+      <child link="${prefix}_leg_link" />
+      <origin xyz="${radius * cos(azimuth)} ${radius * sin(azimuth)} ${mount_z}" rpy="0 0 ${azimuth}" />
+      <axis xyz="0 1 0" />
+      <limit lower="0" upper="1.6" effort="10" velocity="5" />
+    </joint>
+    <link name="${prefix}_leg_link">
+      <visual>
+        <origin xyz="${arm_length / 2} 0 0" rpy="0 ${pi / 2} 0" />
+        <geometry>
+          <cylinder radius="${arm_radius}" length="${arm_length}" />
+        </geometry>
+        <material name="rabbits_blue" />
+      </visual>
+    </link>
+
+    <!-- ナックル: 腕の先。腕と逆に回って胴体と平行を保つ（平行リンクの従動側） -->
+    <joint name="${prefix}_knuckle_joint" type="revolute">
+      <parent link="${prefix}_leg_link" />
+      <child link="${prefix}_knuckle_link" />
+      <origin xyz="${arm_length} 0 0" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit lower="-1.6" upper="0" effort="10" velocity="5" />
+      <mimic joint="${prefix}_leg_joint" multiplier="-1" offset="0" />
+    </joint>
+    <link name="${prefix}_knuckle_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${arm_radius * 1.5}" />
+        </geometry>
+        <material name="rabbits_dark" />
+      </visual>
+    </link>
+
+    <!-- 車輪: z 軸が回転軸、z 正が機体の外側（ナックルの x = 半径方向外向き を z に向ける） -->
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="${prefix}_knuckle_link" />
+      <child link="${prefix}_wheel" />
+      <origin xyz="${wheel_width} 0 0" rpy="0 ${pi / 2} 0" />
+      <axis xyz="0 0 1" />
+    </joint>
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}" />
+        </geometry>
+        <material name="rabbits_dark" />
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!-- gamma の胴体（寸法は仮。CAD 確認後に差し替え） -->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="gamma_body" params="size_xy height">
+    <link name="base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="${size_xy} ${size_xy} ${height}" />
+        </geometry>
+        <material name="rabbits_grey" />
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>
