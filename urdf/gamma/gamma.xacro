@@ -26,6 +26,7 @@
   <xacro:property name="neck_yaw_height" value="0.06" />
   <xacro:property name="neck_pitch_offset" value="0.05" />
   <xacro:property name="neck_camera_offset" value="0.04" />
+  <xacro:property name="neck_imu_offset" value="0.03" />  <!-- カメラの後ろ。基板の位置が決まったら更新 -->
 
   <xacro:gamma_body size_xy="${body_size_xy}" height="${body_height}" />
 
@@ -45,5 +46,6 @@
 
   <!-- 首 -->
   <xacro:gamma_neck mount_z="${body_height / 2}" yaw_height="${neck_yaw_height}"
-                    pitch_offset="${neck_pitch_offset}" camera_offset="${neck_camera_offset}" />
+                    pitch_offset="${neck_pitch_offset}" camera_offset="${neck_camera_offset}"
+                    imu_offset="${neck_imu_offset}" />
 </robot>

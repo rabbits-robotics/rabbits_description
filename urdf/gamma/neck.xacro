@@ -1,12 +1,14 @@
 <?xml version="1.0"?>
 <!--
   gamma の首 3 軸（寸法は仮。CAD 確認後に差し替え）。
-  yaw_joint（z、continuous）→ pitch_joint（y、revolute）→ roll_joint（x、revolute）→ camera_link（固定。IMU とカメラ）。
+  yaw_joint（z、continuous）→ pitch_joint（y、revolute）→ roll_joint（x、revolute）→ camera_link（固定。カメラ）→ imu_link（固定）。
+  imu_link の向きは camera_link と同じ（回転なし）。軸の入れ替えはファームが BNO055 のレジスタで済ませ、imu/data を
+  カメラ座標系で出すので、TF で二重に回さない。位置は仮（カメラの後ろ imu_offset）。
   pitch / roll は論理関節（ファームが差動リンクの 2 モータ角から求めた値）。ロール軸を後回しにする間は 0 が来る。
   符号は REP-103: yaw 左が正、pitch 前が下がると正、roll 右が下がると正。
 -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="gamma_neck" params="mount_z yaw_height pitch_offset camera_offset">
+  <xacro:macro name="gamma_neck" params="mount_z yaw_height pitch_offset camera_offset imu_offset">
     <joint name="yaw_joint" type="continuous">
       <parent link="base_link" />
       <child link="yaw_link" />
@@ -69,6 +71,22 @@
           <box size="0.02 0.03 0.02" />
         </geometry>
         <material name="rabbits_dark" />
+      </visual>
+    </link>
+
+    <!-- IMU（BNO055、gamma_turret 基板上）。bridge の imu/data の frame_id -->
+    <joint name="imu_joint" type="fixed">
+      <parent link="camera_link" />
+      <child link="imu_link" />
+      <origin xyz="${-imu_offset} 0 0" rpy="0 0 0" />
+    </joint>
+    <link name="imu_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.01 0.015 0.003" />
+        </geometry>
+        <material name="rabbits_blue" />
       </visual>
     </link>
   </xacro:macro>
