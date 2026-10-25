@@ -10,6 +10,14 @@
         </geometry>
         <material name="rabbits_grey" />
       </visual>
+      <!-- 正面（+x）の目印。カメラが yaw 0 で向く側 -->
+      <visual>
+        <origin xyz="${size_xy / 2 - 0.01} 0 ${height / 2 + 0.005}" rpy="0 0 0" />
+        <geometry>
+          <box size="0.02 ${size_xy * 0.6} 0.01" />
+        </geometry>
+        <material name="rabbits_orange" />
+      </visual>
     </link>
   </xacro:macro>
 </robot>
