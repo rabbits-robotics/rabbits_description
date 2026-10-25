@@ -41,7 +41,7 @@ rviz/display.rviz
 
 ### gamma のメッシュの座標系（CAD で STL を書き出すときの約束）
 
-STL はリンクごとに 1 ファイル（`meshes/gamma/<リンク>.stl`、バイナリ、mm、粗い解像度で 1 ファイル 1〜2 MB 以下）。**各 STL の原点と軸は、そのリンクの URDF フレームに一致させる**（xacro 側の visual origin を 0 にしておくため）。すべて右手系、ゼロ姿勢（脚はモータ原点 = 最下点、首はまっすぐ前）で書き出す。同じ形の脚と車輪は右前の 1 組だけ書き出し、4 本に使い回す。
+STL はリンクごとに 1 ファイル（`meshes/gamma/<リンク>.stl`、バイナリ、mm、粗い解像度で 1 ファイル 1〜2 MB 以下）。**各 STL の原点と軸は、そのリンクの URDF フレームに一致させる**（xacro 側の visual origin を 0 にしておくため）。すべて右手系、ゼロ姿勢（脚はモータ原点 = 最下点、首はまっすぐ前）で書き出す。同じ形の脚と車輪は右前の 1 組だけ書き出し、4 本に使い回す。大きすぎる STL は Blender の Decimate（collapse）で減らす（胴体は 155k → 46k 三角形、比率 0.3 で見た目を保てた。`blender -b --python <script>` で `wm.stl_import` → Decimate → `wm.stl_export`、軸変換なし）。
 
 | STL | 中身 | 原点 | 軸（= URDF のリンクフレーム） |
 |---|---|---|---|
