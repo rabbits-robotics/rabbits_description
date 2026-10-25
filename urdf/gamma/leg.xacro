@@ -1,134 +1,139 @@
 <?xml version="1.0"?>
 <!--
   gamma の脚 1 本 + 車輪（4 節リンク、実寸。設計書 rabcl docs/superpowers/specs/2026-10-25-gamma-leg-linkage-design.md 7 章）。
-  寸法は config/gamma_linkage.yaml（引数 L）。見た目は箱と円筒（メッシュは後で差し替え）。
+  寸法は config/gamma_linkage.yaml（引数 L）。見た目は meshes/gamma/*.STL（mm、リンクのフレームそのもの。原点と軸の約束は README）。
 
-  脚の面内 2 次元: 関節フレームは z 回りに方位角 azimuth だけ回し、x = 半径方向の外向き、z = 上。
-  回転軸はすべて +y（正の回転は x から −z へ = 下向き）。
+  リンクのフレーム（メッシュの座標系と一致させる）: 各リンクは「z = その関節の回転軸、x = ゼロ姿勢でのリンクの長さ方向」。
+    脚の面（x 外向き、z_up 上、y_left = z_up × x）で、回転軸 = y_left。z 軸は右ねじで回すとリンクの先が下がる向き。
+    胴体に付く関節の origin は rpy = (−π/2, −a, azimuth)（a = ゼロ姿勢でのリンクの向き、+x から上向き正）。
     base_link
-     ├─ <p>_leg_joint   （M、θ = joint_states の脚モータ角。0 = 車高が最も低い）→ crank_link
-     │    └─ <p>_coupler_joint（K、派生: −(ψ − α)）→ coupler_link（連結リンク。先端 J は閉じない = ループをここで切る）
-     ├─ <p>_bar_joint   （B1、派生: −φ）→ bar_link（上のバー）
-     │    └─ <p>_holder_joint（H1、mimic bar × −1）→ holder_link（車輪ホルダ。胴体と平行を保つ）
-     │         └─ <p>_wheel_joint（W、車輪の z = 半径方向の外向き）→ wheel
+     ├─ <p>_leg_joint   （M、x はクランクの向き α0。値 θ = joint_states の脚モータ角、0 = 車高が最も低い）→ crank_link
+     │    └─ <p>_coupler_joint（K、x は連結リンクの向き。派生: ゼロ姿勢からの変化分）→ coupler_link（先端 J は閉じない）
+     ├─ <p>_bar_joint   （B1、x はバーの向き φ0。派生: ゼロ姿勢からの変化分）→ bar_link（上のバー）
+     │    └─ <p>_holder_joint（H1、x は水平外向き。mimic bar × −1）→ holder_link（車輪ホルダ。胴体と平行を保つ）
+     │         └─ <p>_wheel_joint（W、z = 回転軸 = 半径方向の外向き、x 上）→ wheel
      └─ <p>_bar_lower_joint（B2、mimic bar × 1）→ bar_lower_link（下のバー）
-  派生関節（bar、coupler）は linkage_state_publisher が rabcl::LegLinkage で計算して joint_states に足す。
-  クランクの向きは α = α0 − θ なので、クランクと連結リンクの visual は自分のフレームで +x から α0 上を向く。
+  派生関節（bar、coupler）は linkage_state_publisher が rabcl::LegLinkage で計算し、ゼロ姿勢の角度を引いて joint_states に足す
+  （ゼロ姿勢では全関節が 0）。正の回転はどれも「車体が上がる向き」。
 -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="gamma_leg" params="prefix azimuth L">
     <xacro:property name="a0" value="${L['crank_angle_zero']}" />
+    <xacro:property name="phi0" value="${L['bar_angle_zero']}" />
+    <xacro:property name="psi0" value="${L['coupler_dir_zero']}" />
     <xacro:property name="Lc" value="${L['crank_length']}" />
     <xacro:property name="Lr" value="${L['coupler_length']}" />
     <xacro:property name="Lb" value="${L['bar_length']}" />
-    <xacro:property name="arm_r" value="0.006" />
+    <xacro:property name="r" value="${L['leg_radius']}" />
 
-    <!-- クランク（脚モータの出力） -->
+    <!-- クランク（脚モータの出力）: 原点 M、x = クランクの向き -->
     <joint name="${prefix}_leg_joint" type="revolute">
       <parent link="base_link" />
       <child link="${prefix}_crank_link" />
-      <origin xyz="${L['leg_radius'] * cos(azimuth)} ${L['leg_radius'] * sin(azimuth)} 0" rpy="0 0 ${azimuth}" />
-      <axis xyz="0 1 0" />
+      <origin xyz="${r * cos(azimuth)} ${r * sin(azimuth)} 0" rpy="${-pi / 2} ${-a0} ${azimuth}" />
+      <axis xyz="0 0 1" />
       <limit lower="0" upper="${L['theta_max']}" effort="10" velocity="5" />
     </joint>
     <link name="${prefix}_crank_link">
+      <!-- メッシュはリンクのフレームそのもの（README「gamma のメッシュの座標系」）。mm なので 0.001 -->
       <visual>
-        <origin xyz="${Lc / 2 * cos(a0)} 0 ${Lc / 2 * sin(a0)}" rpy="0 ${pi / 2 - a0} 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="${arm_r}" length="${Lc}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/crank.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_blue" />
       </visual>
     </link>
 
-    <!-- 連結リンク（クランク先端 K にぶら下がる。先端 J はホルダに重なって見えるだけ） -->
+    <!-- 連結リンク: 原点 K（クランクの先）、x = 連結リンクの向き。クランクから ψ0 − α0 だけ回った所がゼロ姿勢 -->
     <joint name="${prefix}_coupler_joint" type="revolute">
       <parent link="${prefix}_crank_link" />
       <child link="${prefix}_coupler_link" />
-      <origin xyz="${Lc * cos(a0)} 0 ${Lc * sin(a0)}" rpy="0 0 0" />
-      <axis xyz="0 1 0" />
+      <origin xyz="${Lc} 0 0" rpy="0 0 ${a0 - psi0}" />
+      <axis xyz="0 0 1" />
       <limit lower="${-pi}" upper="${pi}" effort="0" velocity="10" />
     </joint>
     <link name="${prefix}_coupler_link">
       <visual>
-        <origin xyz="${Lr / 2 * cos(a0)} 0 ${Lr / 2 * sin(a0)}" rpy="0 ${pi / 2 - a0} 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="${arm_r}" length="${Lr}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/coupler.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_dark" />
       </visual>
     </link>
 
-    <!-- 上のバー（派生関節。バーのフレームでは +x 向き） -->
+    <!-- 上のバー: 原点 B1、x = バーの向き φ0 -->
     <joint name="${prefix}_bar_joint" type="revolute">
       <parent link="base_link" />
       <child link="${prefix}_bar_link" />
-      <origin xyz="${(L['leg_radius'] + L['bar_pivot'][0]) * cos(azimuth)} ${(L['leg_radius'] + L['bar_pivot'][0]) * sin(azimuth)} ${L['bar_pivot'][1]}"
-              rpy="0 0 ${azimuth}" />
-      <axis xyz="0 1 0" />
+      <origin xyz="${(r + L['bar_pivot'][0]) * cos(azimuth)} ${(r + L['bar_pivot'][0]) * sin(azimuth)} ${L['bar_pivot'][1]}"
+              rpy="${-pi / 2} ${-phi0} ${azimuth}" />
+      <axis xyz="0 0 1" />
       <limit lower="${-pi}" upper="${pi}" effort="0" velocity="10" />
     </joint>
     <link name="${prefix}_bar_link">
       <visual>
-        <origin xyz="${Lb / 2} 0 0" rpy="0 ${pi / 2} 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="${arm_r}" length="${Lb}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/bar.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_grey" />
       </visual>
     </link>
 
-    <!-- 下のバー（上のバーと同じ角度） -->
+    <!-- 下のバー: 原点 B2、上のバーと同じ角度 -->
     <joint name="${prefix}_bar_lower_joint" type="revolute">
       <parent link="base_link" />
       <child link="${prefix}_bar_lower_link" />
-      <origin xyz="${(L['leg_radius'] + L['bar_pivot_lower'][0]) * cos(azimuth)} ${(L['leg_radius'] + L['bar_pivot_lower'][0]) * sin(azimuth)} ${L['bar_pivot_lower'][1]}"
-              rpy="0 0 ${azimuth}" />
-      <axis xyz="0 1 0" />
+      <origin xyz="${(r + L['bar_pivot_lower'][0]) * cos(azimuth)} ${(r + L['bar_pivot_lower'][0]) * sin(azimuth)} ${L['bar_pivot_lower'][1]}"
+              rpy="${-pi / 2} ${-phi0} ${azimuth}" />
+      <axis xyz="0 0 1" />
       <limit lower="${-pi}" upper="${pi}" effort="0" velocity="10" />
       <mimic joint="${prefix}_bar_joint" multiplier="1" offset="0" />
     </joint>
     <link name="${prefix}_bar_lower_link">
       <visual>
-        <origin xyz="${Lb / 2} 0 0" rpy="0 ${pi / 2} 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="${arm_r}" length="${Lb}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/bar.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_grey" />
       </visual>
     </link>
 
-    <!-- ホルダ: 上のバーの先 H1。バーと逆に回って胴体と平行を保つ。J（上端ピン）と W（車輪中心）を含む -->
+    <!-- ホルダ: 原点 H1（上のバーの先）、x = 水平外向き、y = 下。バーと逆に回って胴体と平行を保つ -->
     <joint name="${prefix}_holder_joint" type="revolute">
       <parent link="${prefix}_bar_link" />
       <child link="${prefix}_holder_link" />
-      <origin xyz="${Lb} 0 0" rpy="0 0 0" />
-      <axis xyz="0 1 0" />
+      <origin xyz="${Lb} 0 0" rpy="0 0 ${phi0}" />
+      <axis xyz="0 0 1" />
       <limit lower="${-pi}" upper="${pi}" effort="0" velocity="10" />
       <mimic joint="${prefix}_bar_joint" multiplier="-1" offset="0" />
     </joint>
     <link name="${prefix}_holder_link">
+      <!-- J（上端ピン）は y = −coupler_pin.z、H2 は y = +0.02、W は (wheel.x, −wheel.z)（y は下向き正） -->
       <visual>
-        <origin xyz="${L['wheel'][0] / 2} 0 ${(L['coupler_pin'][1] + L['wheel'][1]) / 2}" rpy="0 0 0" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <box size="${L['wheel'][0]} 0.02 ${L['coupler_pin'][1] - L['wheel'][1]}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/holder.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_blue" />
       </visual>
     </link>
 
-    <!-- 車輪: z 軸が回転軸、z 正が機体の外側（ホルダの x = 半径方向外向き を z に向ける） -->
+    <!-- 車輪: 原点 W、z = 回転軸（半径方向の外向き）、x = 上 -->
     <joint name="${prefix}_wheel_joint" type="continuous">
       <parent link="${prefix}_holder_link" />
       <child link="${prefix}_wheel" />
-      <origin xyz="${L['wheel'][0]} 0 ${L['wheel'][1]}" rpy="0 ${pi / 2} 0" />
+      <origin xyz="${L['wheel'][0]} ${-L['wheel'][1]} 0" rpy="${-pi / 2} 0 ${-pi / 2}" />
       <axis xyz="0 0 1" />
     </joint>
     <link name="${prefix}_wheel">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="${L['wheel_radius']}" length="${L['wheel_width']}" />
+          <mesh filename="package://rabbits_description/meshes/gamma/wheel.STL" scale="0.001 0.001 0.001" />
         </geometry>
         <material name="rabbits_dark" />
       </visual>

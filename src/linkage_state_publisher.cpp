@@ -36,9 +36,9 @@ LinkageStatePublisher::LinkageStatePublisher(const rclcpp::NodeOptions & options
   if (leg_joints_.size() != LEGS || prefixes_.size() != LEGS) {
     throw std::invalid_argument("leg_joints and prefixes must have 4 entries");
   }
+  linkage_.Forward(0.0f, zero_);
   for (size_t i = 0; i < LEGS; ++i) {
-    pose_[i] = {};
-    linkage_.Forward(0.0f, pose_[i]);
+    pose_[i] = zero_;
   }
   pub_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
@@ -78,11 +78,11 @@ void LinkageStatePublisher::JointStateCB(const sensor_msgs::msg::JointState::Sha
   const bool has_velocity = !msg->velocity.empty();
   const bool has_effort = !msg->effort.empty();
   for (size_t i = 0; i < LEGS; ++i) {
-    // URDF の関節軸は +y（正 = 下向き）。φ と ψ − α は上向き正なので反転
+    // URDF の関節は正 = 車体が上がる向き（φ、ψ − α と逆）で、ゼロ姿勢からの変化分
     out.name.push_back(prefixes_[i] + "_bar_joint");
-    out.position.push_back(-static_cast<double>(pose_[i].bar_angle));
+    out.position.push_back(-static_cast<double>(pose_[i].bar_angle - zero_.bar_angle));
     out.name.push_back(prefixes_[i] + "_coupler_joint");
-    out.position.push_back(-static_cast<double>(pose_[i].coupler_angle));
+    out.position.push_back(-static_cast<double>(pose_[i].coupler_angle - zero_.coupler_angle));
     for (int n = 0; n < 2; ++n) {
       if (has_velocity) {
         out.velocity.push_back(0.0);

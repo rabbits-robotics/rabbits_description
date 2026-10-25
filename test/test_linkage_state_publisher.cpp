@@ -110,12 +110,12 @@ TEST_F(LinkageStatePublisherTest, MixesMotorAndDerivedJoints)
   EXPECT_DOUBLE_EQ(out.position[4], 0.7);
   EXPECT_DOUBLE_EQ(out.velocity[4], 0.5);
   EXPECT_DOUBLE_EQ(out.effort[4], 5.0);
-  // 派生（URDF の +y 軸の符号: bar = −φ、coupler = −(ψ − α)）
-  EXPECT_NEAR(Get(out, "right_front_bar_joint"), -0.4821, 1e-3);
-  EXPECT_NEAR(Get(out, "right_front_coupler_joint"), 2.4496, 1e-3);
-  EXPECT_NEAR(Get(out, "left_front_bar_joint"), -0.2073, 1e-3);
-  EXPECT_NEAR(Get(out, "right_back_bar_joint"), 0.1260, 1e-3);
-  EXPECT_NEAR(Get(out, "left_back_coupler_joint"), 1.2593, 1e-3);
+  // 派生（ゼロ姿勢からの変化分、正 = 車体が上がる向き: bar = −(φ − 0.4821)、coupler = −((ψ − α) + 2.4496)）
+  EXPECT_NEAR(Get(out, "right_front_bar_joint"), 0.0, 1e-3);      // θ = 0
+  EXPECT_NEAR(Get(out, "right_front_coupler_joint"), 0.0, 1e-3);
+  EXPECT_NEAR(Get(out, "left_front_bar_joint"), 0.4821 - 0.2073, 1e-3);   // θ = π/6
+  EXPECT_NEAR(Get(out, "right_back_bar_joint"), 0.4821 + 0.1260, 1e-3);   // θ = π/3
+  EXPECT_NEAR(Get(out, "left_back_coupler_joint"), -(2.4496 - 1.2593), 1e-3);  // θ = π/2（クランクに対して上向きに回る = 負）
   EXPECT_DOUBLE_EQ(out.velocity[12], 0.0);
   EXPECT_DOUBLE_EQ(out.effort[12], 0.0);
 }
@@ -130,7 +130,7 @@ TEST_F(LinkageStatePublisherTest, PassesThroughJointStatesWithoutLegs)
   const JointState & out = received_[0];
   ASSERT_EQ(out.name.size(), 9u);
   EXPECT_EQ(out.velocity.size(), 0u);  // 入力に無い配列は足さない
-  EXPECT_NEAR(Get(out, "right_front_bar_joint"), -0.4821, 1e-3);  // Forward(0) の姿勢
+  EXPECT_NEAR(Get(out, "right_front_bar_joint"), 0.0, 1e-3);  // Forward(0) の姿勢 = ゼロ
 }
 
 TEST_F(LinkageStatePublisherTest, KeepsLastPoseWhenOutOfRange)

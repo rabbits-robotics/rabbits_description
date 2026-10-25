@@ -12,26 +12,26 @@
 <line x1="176.0" y1="576.0" x2="388.6" y2="687.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
 <line x1="388.6" y1="607.4" x2="388.6" y2="537.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
 <line x1="388.6" y1="607.4" x2="388.6" y2="687.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
-<line x1="388.6" y1="607.4" x2="564.6" y2="737.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
-<rect x="538.6" y="587.4" width="52.0" height="300.0" rx="6" fill="none" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/>
+<line x1="388.6" y1="607.4" x2="541.8" y2="783.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<rect x="515.8" y="633.4" width="52.0" height="300.0" rx="6" fill="none" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/>
 <circle cx="422.0" cy="382.0" r="4" fill="#bbb"/>
 <circle cx="388.6" cy="537.4" r="4" fill="#bbb"/>
 <circle cx="388.6" cy="607.4" r="4" fill="#bbb"/>
 <circle cx="388.6" cy="687.4" r="4" fill="#bbb"/>
-<circle cx="564.6" cy="737.4" r="4" fill="#bbb"/>
+<circle cx="541.8" cy="783.4" r="4" fill="#bbb"/>
 <line x1="280.0" y1="300.0" x2="362.0" y2="158.0" stroke="#1f77b4" stroke-width="3" stroke-linecap="round"/>
 <line x1="362.0" y1="158.0" x2="388.6" y2="314.7" stroke="#333" stroke-width="3" stroke-linecap="round"/>
 <line x1="176.0" y1="496.0" x2="388.6" y2="384.7" stroke="#777" stroke-width="3" stroke-linecap="round"/>
 <line x1="176.0" y1="576.0" x2="388.6" y2="464.7" stroke="#777" stroke-width="3" stroke-linecap="round"/>
 <line x1="388.6" y1="384.7" x2="388.6" y2="314.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
 <line x1="388.6" y1="384.7" x2="388.6" y2="464.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
-<line x1="388.6" y1="384.7" x2="564.6" y2="514.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
-<rect x="538.6" y="364.7" width="52.0" height="300.0" rx="6" fill="none" stroke="#d62728" stroke-width="3"/>
+<line x1="388.6" y1="384.7" x2="541.8" y2="560.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
+<rect x="515.8" y="410.7" width="52.0" height="300.0" rx="6" fill="none" stroke="#d62728" stroke-width="3"/>
 <circle cx="362.0" cy="158.0" r="4" fill="#d62728"/>
 <circle cx="388.6" cy="314.7" r="4" fill="#d62728"/>
 <circle cx="388.6" cy="384.7" r="4" fill="#d62728"/>
 <circle cx="388.6" cy="464.7" r="4" fill="#d62728"/>
-<circle cx="564.6" cy="514.7" r="4" fill="#d62728"/>
+<circle cx="541.8" cy="560.7" r="4" fill="#d62728"/>
 <circle cx="176.0" cy="496.0" r="5" fill="#222"/>
 <text x="150" y="492" font-weight="bold">B1</text>
 <circle cx="176.0" cy="576.0" r="5" fill="#222"/>
@@ -42,13 +42,13 @@
 <text x="397" y="309" font-weight="bold" fill="#d62728">J</text>
 <text x="397" y="389" font-weight="bold" fill="#d62728">H1</text>
 <text x="397" y="479" font-weight="bold" fill="#d62728">H2</text>
-<text x="573" y="507" font-weight="bold" fill="#d62728">W</text>
+<text x="550" y="553" font-weight="bold" fill="#d62728">W</text>
 <text x="251" y="225" fill="#1f77b4">クランク Lc</text>
 <text x="385" y="236" fill="#333">連結リンク Lr</text>
 <text x="252" y="430" fill="#555">バー Lb（上）</text>
 <text x="252" y="542" fill="#555">バー Lb（下）</text>
-<text x="485" y="442" fill="#d62728">ホルダ</text>
-<text x="579" y="555" fill="#d62728">車輪（軸は x 向き）</text>
+<text x="473" y="465" fill="#d62728">ホルダ</text>
+<text x="556" y="601" fill="#d62728">車輪（軸は x 向き）</text>
 <path d="M 320.0,300.0 A 40,40 0 0,0 300.0,265.4" fill="none" stroke="#1f77b4"/>
 <text x="324" y="286" fill="#1f77b4">α0 = 60°</text>
 <path d="M 216.0,496.0 A 40,40 0 0,0 211.4,477.5" fill="none" stroke="#777"/>
