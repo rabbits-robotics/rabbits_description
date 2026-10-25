@@ -1,0 +1,26 @@
+# gamma の脚リンク機構と首の寸法 [m / rad]。gamma_turret_fw の src/robot.hpp（LEG_LINKAGE など）と **対で更新する**。
+# 記号（M, K, J, B1, B2, H1, H2, W, Lc, Lr, Lb, α0, φ）は docs/gamma_leg_linkage.svg の図を見る。
+# 値の出どころは rabcl の docs/superpowers/specs/2026-10-25-gamma-leg-linkage-design.md 2 章（CAD、2026-10-25）。
+# - URDF（urdf/gamma/gamma.xacro）が xacro.load_yaml で読む
+# - linkage_state_publisher（ミキサー）と rabbits_sim の gamma_fake_node が ROS パラメータとして読む（/** でどのノード名でも可）
+# 脚 1 本の面内 2 次元: 原点 = 脚モータ軸 M、x = 半径方向の外向き、z = 上。θ = 0 がメカスト（車高が最も低い）
+/**:
+  ros__parameters:
+    linkage:
+      crank_length: 0.041          # Lc: モータ軸 → クランク先端ピン K
+      crank_angle_zero: 1.0471976  # α0: θ = 0 でのクランクの向き（+x から上向き正、60°）。クランクの向きは α0 − θ
+      coupler_length: 0.03975      # Lr: K → ホルダ上端ピン J
+      bar_length: 0.060            # Lb: バー（2 本同じ）
+      bar_pivot: [-0.026, -0.049]       # B1: 上のバーの胴体側ピン（M から x, z）
+      bar_pivot_lower: [-0.026, -0.069] # B2: 下のバーの胴体側ピン（URDF の表示用）
+      coupler_pin: [0.0, 0.0175]   # H1（上のバーのホルダ側ピン）→ J
+      wheel: [0.044, -0.0325]      # H1 → 車輪中心 W（面に垂直な方向のずれは 0）
+      theta_max: 1.5707963         # メカスト間 90°。使用範囲は両端 0.15 rad の余裕
+      drop_min: 0.05756            # 車高 0 の車輪の下がり（θ = 0.15 rad）
+      drop_max: 0.10377            # 車高 1（θ = 1.42 rad）
+      leg_radius: 0.092            # base 原点（脚モータ軸の水平面 × Yaw 軸）から M までの水平距離
+      tilt_radius: 0.170           # 車体中心から車輪の接地点まで（r + W.x、中間の車高）
+      wheel_radius: 0.0375         # φ75
+      wheel_width: 0.013
+      yaw_origin_z: -0.0255        # 首 Yaw 原点の高さ（base 原点から）
+      neck_pitch_z: 0.1264         # Yaw 原点 → Pitch / Roll 原点（同じ点。仮）

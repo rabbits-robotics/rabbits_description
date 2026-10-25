@@ -34,9 +34,9 @@
     </joint>
     <link name="pitch_link">
       <visual>
-        <origin xyz="${pitch_offset / 2} 0 0" rpy="0 ${pi / 2} 0" />
+        <origin xyz="${pitch_offset / 2} 0 0" rpy="0 0 0" />
         <geometry>
-          <cylinder radius="0.02" length="${pitch_offset}" />
+          <sphere radius="0.02" />
         </geometry>
         <material name="rabbits_orange" />
       </visual>

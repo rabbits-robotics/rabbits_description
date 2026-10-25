@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
-<!-- gamma の胴体（寸法は仮。CAD 確認後に差し替え） -->
+<!-- gamma の胴体（寸法は仮。CAD 確認後に差し替え）。base 原点は脚モータ軸の面なので箱の中心は center_z -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="gamma_body" params="size_xy height">
+  <xacro:macro name="gamma_body" params="size_xy height center_z">
     <link name="base_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
+        <origin xyz="0 0 ${center_z}" rpy="0 0 0" />
         <geometry>
           <box size="${size_xy} ${size_xy} ${height}" />
         </geometry>
@@ -12,7 +12,7 @@
       </visual>
       <!-- 正面（+x）の目印。カメラが yaw 0 で向く側 -->
       <visual>
-        <origin xyz="${size_xy / 2 - 0.01} 0 ${height / 2 + 0.005}" rpy="0 0 0" />
+        <origin xyz="${size_xy / 2 - 0.01} 0 ${center_z + height / 2 + 0.005}" rpy="0 0 0" />
         <geometry>
           <box size="0.02 ${size_xy * 0.6} 0.01" />
         </geometry>

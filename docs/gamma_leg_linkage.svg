@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="940" viewBox="0 0 840 940" font-family="sans-serif" font-size="13">
+<rect width="100%" height="100%" fill="white"/>
+<rect x="0.0" y="148.0" width="248.0" height="552.0" fill="#e8e8e8" stroke="#999"/>
+<text x="8" y="166" fill="#555">胴体（base_link 側）</text>
+<line x1="280.0" y1="300.0" x2="400.0" y2="300.0" stroke="#444" marker-end="url(#arrow)"/>
+<line x1="280.0" y1="300.0" x2="280.0" y2="190.0" stroke="#444" marker-end="url(#arrow)"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#444"/></marker></defs>
+<text x="388" y="294">x（外向き）</text><text x="286" y="200">z（上）</text>
+<line x1="280.0" y1="300.0" x2="422.0" y2="382.0" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="422.0" y1="382.0" x2="388.6" y2="537.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="176.0" y1="496.0" x2="388.6" y2="607.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="176.0" y1="576.0" x2="388.6" y2="687.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="388.6" y1="607.4" x2="388.6" y2="537.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="388.6" y1="607.4" x2="388.6" y2="687.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<line x1="388.6" y1="607.4" x2="564.6" y2="737.4" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+<rect x="538.6" y="587.4" width="52.0" height="300.0" rx="6" fill="none" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/>
+<circle cx="422.0" cy="382.0" r="4" fill="#bbb"/>
+<circle cx="388.6" cy="537.4" r="4" fill="#bbb"/>
+<circle cx="388.6" cy="607.4" r="4" fill="#bbb"/>
+<circle cx="388.6" cy="687.4" r="4" fill="#bbb"/>
+<circle cx="564.6" cy="737.4" r="4" fill="#bbb"/>
+<line x1="280.0" y1="300.0" x2="362.0" y2="158.0" stroke="#1f77b4" stroke-width="3" stroke-linecap="round"/>
+<line x1="362.0" y1="158.0" x2="388.6" y2="314.7" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+<line x1="176.0" y1="496.0" x2="388.6" y2="384.7" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+<line x1="176.0" y1="576.0" x2="388.6" y2="464.7" stroke="#777" stroke-width="3" stroke-linecap="round"/>
+<line x1="388.6" y1="384.7" x2="388.6" y2="314.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
+<line x1="388.6" y1="384.7" x2="388.6" y2="464.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
+<line x1="388.6" y1="384.7" x2="564.6" y2="514.7" stroke="#d62728" stroke-width="3" stroke-linecap="round"/>
+<rect x="538.6" y="364.7" width="52.0" height="300.0" rx="6" fill="none" stroke="#d62728" stroke-width="3"/>
+<circle cx="362.0" cy="158.0" r="4" fill="#d62728"/>
+<circle cx="388.6" cy="314.7" r="4" fill="#d62728"/>
+<circle cx="388.6" cy="384.7" r="4" fill="#d62728"/>
+<circle cx="388.6" cy="464.7" r="4" fill="#d62728"/>
+<circle cx="564.6" cy="514.7" r="4" fill="#d62728"/>
+<circle cx="176.0" cy="496.0" r="5" fill="#222"/>
+<text x="150" y="492" font-weight="bold">B1</text>
+<circle cx="176.0" cy="576.0" r="5" fill="#222"/>
+<text x="150" y="592" font-weight="bold">B2</text>
+<circle cx="280.0" cy="300.0" r="5" fill="#222"/>
+<text x="272" y="322" font-weight="bold">M</text>
+<text x="368" y="150" font-weight="bold" fill="#d62728">K</text>
+<text x="397" y="309" font-weight="bold" fill="#d62728">J</text>
+<text x="397" y="389" font-weight="bold" fill="#d62728">H1</text>
+<text x="397" y="479" font-weight="bold" fill="#d62728">H2</text>
+<text x="573" y="507" font-weight="bold" fill="#d62728">W</text>
+<text x="251" y="225" fill="#1f77b4">クランク Lc</text>
+<text x="385" y="236" fill="#333">連結リンク Lr</text>
+<text x="252" y="430" fill="#555">バー Lb（上）</text>
+<text x="252" y="542" fill="#555">バー Lb（下）</text>
+<text x="485" y="442" fill="#d62728">ホルダ</text>
+<text x="579" y="555" fill="#d62728">車輪（軸は x 向き）</text>
+<path d="M 320.0,300.0 A 40,40 0 0,0 300.0,265.4" fill="none" stroke="#1f77b4"/>
+<text x="324" y="286" fill="#1f77b4">α0 = 60°</text>
+<path d="M 216.0,496.0 A 40,40 0 0,0 211.4,477.5" fill="none" stroke="#777"/>
+<text x="220" y="492" fill="#777">φ</text>
+<line x1="12" y1="20" x2="52" y2="20" stroke="#d62728" stroke-width="3"/><text x="60" y="25">θ = 0（原点、車高が最も低い）</text>
+<line x1="12" y1="42" x2="52" y2="42" stroke="#bbb" stroke-width="2" stroke-dasharray="6,4"/><text x="60" y="47">θ = 90°（メカスト、車高が最も高い）</text>
+<text x="12" y="66" fill="#555">M = 脚モータ軸（原点）。クランクの向き α = α0 − θ。B1 / B2 = バーの胴体側ピン、H1 / H2 = ホルダ側ピン、</text>
+<text x="12" y="84" fill="#555">J = 連結リンクのホルダ側ピン（H1 の 17.5 mm 上）、W = 車輪中心。ホルダは胴体と平行を保ったまま半径 Lb の円弧上を動く。</text>
+</svg>

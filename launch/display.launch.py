@@ -1,7 +1,8 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command, EqualsSubstitution, FindExecutable, LaunchConfiguration, PathJoinSubstitution)
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -33,11 +34,23 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description}],
     )
 
+    # gamma は脚の派生関節（バー・連結リンク）をミキサーが足すので、GUI の出力はミキサーの入力へ
+    is_gamma = EqualsSubstitution(LaunchConfiguration('robot'), 'gamma')
     joint_state_pub_gui_node = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         output='screen',
+        remappings=[('joint_states', 'motor_joint_states')],
         condition=IfCondition(LaunchConfiguration('use_gui')),
+    )
+    linkage_node = Node(
+        package='rabbits_description',
+        executable='linkage_state_publisher',
+        name='linkage_state_publisher',
+        output='screen',
+        parameters=[PathJoinSubstitution([
+            FindPackageShare('rabbits_description'), 'config', 'gamma_linkage.yaml'])],
+        condition=IfCondition(is_gamma),
     )
 
     rviz_node = Node(
@@ -53,5 +66,6 @@ def generate_launch_description():
         use_gui_arg,
         robot_state_pub_node,
         joint_state_pub_gui_node,
+        linkage_node,
         rviz_node,
     ])

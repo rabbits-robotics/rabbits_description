@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 <!--
-  gamma（2026 年機）の URDF。寸法は仮（箱と円筒）。CAD 確認後にメッシュと寸法を差し替える。
+  gamma（2026 年機）の URDF。脚は 4 節リンクの実寸（config/gamma_linkage.yaml）、首と胴体は仮（箱と円筒）。
+  メッシュは README「gamma のメッシュの座標系」の約束で書き出したら差し替える。
+  base 原点 = 4 本の脚モータ軸を含む水平面と首 Yaw 軸の交点。x 前、y 左、z 上。
   軸の向きは設計書（rabbits_sim docs/superpowers/specs/2026-10-24-gamma-sim-design.md 5 章）の規約で確定:
     車輪は車輪リンクの z 軸が回転軸で z 正が機体の外側、脚は角度 0 が最下点で増えると車体が上がる。
   関節名は rabbits_bridge の config/gamma.yaml の joints（関節番号順）と同じ:
     yaw_joint, pitch_joint, roll_joint,
     right_front_wheel_joint, left_front_wheel_joint, right_back_wheel_joint, left_back_wheel_joint,
     right_front_leg_joint, left_front_leg_joint, right_back_leg_joint, left_back_leg_joint
-  （*_knuckle_joint は mimic で、joint_states には載せない）
+  派生関節（*_bar_joint, *_coupler_joint）は linkage_state_publisher が足し、*_bar_lower_joint / *_holder_joint は mimic。
 -->
 <robot name="gamma" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:include filename="$(find rabbits_description)/urdf/common/materials.xacro" />
@@ -15,37 +17,27 @@
   <xacro:include filename="$(find rabbits_description)/urdf/gamma/leg.xacro" />
   <xacro:include filename="$(find rabbits_description)/urdf/gamma/neck.xacro" />
 
-  <!-- 仮の寸法 [m] -->
-  <xacro:property name="body_size_xy" value="0.28" />
-  <xacro:property name="body_height" value="0.10" />
-  <xacro:property name="leg_radius" value="0.14" />        <!-- 脚の取り付け半径（gamma_turret_fw の BODY_D / 2） -->
-  <xacro:property name="leg_arm_length" value="0.10" />
-  <xacro:property name="leg_arm_radius" value="0.012" />
-  <xacro:property name="wheel_radius" value="0.03" />      <!-- WHEEL_D / 2 -->
-  <xacro:property name="wheel_width" value="0.02" />
-  <xacro:property name="neck_yaw_height" value="0.06" />
-  <xacro:property name="neck_pitch_offset" value="0.05" />
+  <!-- 寸法 [m / rad]。gamma_turret_fw の robot.hpp と対で更新する -->
+  <xacro:property name="cfg" value="${xacro.load_yaml('$(find rabbits_description)/config/gamma_linkage.yaml')}" />
+  <xacro:property name="L" value="${cfg['/**']['ros__parameters']['linkage']}" />
+
+  <!-- 仮の寸法 [m]（胴体の箱と首） -->
+  <xacro:property name="body_size_xy" value="0.24" />
+  <xacro:property name="body_height" value="0.08" />
+  <xacro:property name="body_center_z" value="-0.02" />   <!-- 脚モータ軸の面を跨ぐ -->
   <xacro:property name="neck_camera_offset" value="0.04" />
   <xacro:property name="neck_imu_offset" value="0.03" />  <!-- カメラの後ろ。基板の位置が決まったら更新 -->
 
-  <xacro:gamma_body size_xy="${body_size_xy}" height="${body_height}" />
+  <xacro:gamma_body size_xy="${body_size_xy}" height="${body_height}" center_z="${body_center_z}" />
 
   <!-- 脚 + 車輪。方位角は FR −45°, FL 45°, BR −135°, BL 135°（x 前、y 左） -->
-  <xacro:gamma_leg prefix="right_front" azimuth="${-pi / 4}" radius="${leg_radius}" mount_z="${-body_height / 2}"
-                   arm_length="${leg_arm_length}" arm_radius="${leg_arm_radius}"
-                   wheel_radius="${wheel_radius}" wheel_width="${wheel_width}" />
-  <xacro:gamma_leg prefix="left_front" azimuth="${pi / 4}" radius="${leg_radius}" mount_z="${-body_height / 2}"
-                   arm_length="${leg_arm_length}" arm_radius="${leg_arm_radius}"
-                   wheel_radius="${wheel_radius}" wheel_width="${wheel_width}" />
-  <xacro:gamma_leg prefix="right_back" azimuth="${-3 * pi / 4}" radius="${leg_radius}" mount_z="${-body_height / 2}"
-                   arm_length="${leg_arm_length}" arm_radius="${leg_arm_radius}"
-                   wheel_radius="${wheel_radius}" wheel_width="${wheel_width}" />
-  <xacro:gamma_leg prefix="left_back" azimuth="${3 * pi / 4}" radius="${leg_radius}" mount_z="${-body_height / 2}"
-                   arm_length="${leg_arm_length}" arm_radius="${leg_arm_radius}"
-                   wheel_radius="${wheel_radius}" wheel_width="${wheel_width}" />
+  <xacro:gamma_leg prefix="right_front" azimuth="${-pi / 4}" L="${L}" />
+  <xacro:gamma_leg prefix="left_front" azimuth="${pi / 4}" L="${L}" />
+  <xacro:gamma_leg prefix="right_back" azimuth="${-3 * pi / 4}" L="${L}" />
+  <xacro:gamma_leg prefix="left_back" azimuth="${3 * pi / 4}" L="${L}" />
 
-  <!-- 首 -->
-  <xacro:gamma_neck mount_z="${body_height / 2}" yaw_height="${neck_yaw_height}"
-                    pitch_offset="${neck_pitch_offset}" camera_offset="${neck_camera_offset}"
+  <!-- 首。Yaw 原点は実寸、Pitch / Roll は同じ点（仮） -->
+  <xacro:gamma_neck mount_z="${L['yaw_origin_z']}" yaw_height="${L['neck_pitch_z']}"
+                    pitch_offset="0" camera_offset="${neck_camera_offset}"
                     imu_offset="${neck_imu_offset}" />
 </robot>
