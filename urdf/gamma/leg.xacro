@@ -41,7 +41,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/crank.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_blue" />
+        <material name="rabbits_pale_blue" />
       </visual>
     </link>
 
@@ -59,7 +59,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/coupler.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_dark" />
+        <material name="rabbits_pale_orange" />
       </visual>
     </link>
 
@@ -78,7 +78,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/bar.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_grey" />
+        <material name="rabbits_pale_green" />
       </visual>
     </link>
 
@@ -98,7 +98,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/bar.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_grey" />
+        <material name="rabbits_pale_green" />
       </visual>
     </link>
 
@@ -118,7 +118,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/holder.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_blue" />
+        <material name="rabbits_pale_purple" />
       </visual>
     </link>
 
@@ -135,7 +135,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/wheel.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_dark" />
+        <material name="rabbits_mid_grey" />
       </visual>
     </link>
   </xacro:macro>

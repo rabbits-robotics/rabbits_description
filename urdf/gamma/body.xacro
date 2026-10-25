@@ -9,7 +9,7 @@
         <geometry>
           <mesh filename="package://rabbits_description/meshes/gamma/base.STL" scale="0.001 0.001 0.001" />
         </geometry>
-        <material name="rabbits_grey" />
+        <material name="rabbits_pale_yellow" />
       </visual>
       <collision>
         <origin xyz="0 0 ${center_z}" rpy="0 0 0" />
