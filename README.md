@@ -36,7 +36,7 @@ rviz/display.rviz
 - リンクのフレームは「z = その関節の回転軸、x = ゼロ姿勢でのリンクの長さ方向」（メッシュの座標系と同じ）。関節の値はゼロ姿勢からの変化分で、正 = 車体が上がる向き（ゼロ姿勢では全関節 0）。ミキサーが出す値は bar = −(φ − φ0)、coupler = −((ψ − α) − (ψ0 − α0))。
 - base 原点は 4 本の脚モータ軸を含む水平面と Yaw 軸の交点（x 前、y 左、z 上）。首 Yaw 原点はその 25.5 mm 下、Pitch / Roll はそこから 126.4 mm 上の同じ点（仮）。
 - pitch / roll は論理関節（ファームが差動リンクの 2 モータ角から求めた値）。ロール軸を後回しにする間は 0 が来て静止する。
-- rviz では `base_link` が固定なので、車高を上げると車輪が下へ伸びて見える（床は描かない）。
+- ミキサーは `base_footprint → base_link` の TF も出す（`publish_footprint`、既定 true）。4 輪の接地点（車輪中心の真下 `wheel_radius`）が地面 z = 0 に乗るように、対角線 2 本の外積で地面の法線、4 点の平均で高さを決める。yaw は含めない（`base_footprint` の x は胴体の前を地面に投影した向き）。rviz の固定フレームは `base_footprint`（display.rviz / bringup の gamma.rviz）なので、車高を上げると胴体が上がり、ロール・ピッチで胴体が傾いて見える。オドメトリ（`map → base_footprint`）は無い。
 - 車輪の回転の向きは、`joint_states` に入る角度（ファーム / 偽ファームの `OmniDrive × WHEEL_SIGN`）をそのまま表す。現状の `WHEEL_SIGN = -1` では前進指令で後ろに転がって見える（rabbits_sim の README「rviz での車輪の向きの読み方」）。
 
 ### gamma のメッシュの座標系（CAD で STL を書き出すときの約束）

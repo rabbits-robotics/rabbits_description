@@ -8,6 +8,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_msgs/msg/tf_message.hpp>
 
 #include "rabbits_description/linkage_state_publisher.hpp"
 
@@ -36,8 +39,10 @@ protected:
       rclcpp::Parameter("linkage.bar_length", 0.060),
       rclcpp::Parameter("linkage.bar_pivot", std::vector<double>{-0.026, -0.049}),
       rclcpp::Parameter("linkage.coupler_pin", std::vector<double>{0.0, 0.0175}),
-      rclcpp::Parameter("linkage.wheel", std::vector<double>{0.044, -0.0325}),
+      rclcpp::Parameter("linkage.wheel", std::vector<double>{0.0383, -0.044}),
       rclcpp::Parameter("linkage.theta_max", 1.5707963),
+      rclcpp::Parameter("linkage.leg_radius", 0.092),
+      rclcpp::Parameter("linkage.wheel_radius", 0.0375),
       });
     node_ = std::make_shared<LinkageStatePublisher>(options);
     sub_ = node_->create_subscription<JointState>(
@@ -88,10 +93,76 @@ protected:
     return NAN;
   }
 
+  // base_footprint → base_link の roll / pitch / yaw と高さ
+  struct Footprint
+  {
+    double roll, pitch, yaw, height;
+  };
+  Footprint GetFootprint() const
+  {
+    const geometry_msgs::msg::TransformStamped t = node_->Footprint();
+    EXPECT_EQ(t.header.frame_id, "base_footprint");
+    EXPECT_EQ(t.child_frame_id, "base_link");
+    tf2::Quaternion q(t.transform.rotation.x, t.transform.rotation.y, t.transform.rotation.z,
+      t.transform.rotation.w);
+    Footprint f;
+    tf2::Matrix3x3(q).getRPY(f.roll, f.pitch, f.yaw);
+    f.height = t.transform.translation.z;
+    EXPECT_DOUBLE_EQ(t.transform.translation.x, 0.0);
+    EXPECT_DOUBLE_EQ(t.transform.translation.y, 0.0);
+    return f;
+  }
+
   std::shared_ptr<LinkageStatePublisher> node_;
   rclcpp::Subscription<JointState>::SharedPtr sub_;
   std::vector<JointState> received_;
 };
+
+TEST_F(LinkageStatePublisherTest, FootprintIsLevelWhenLegsAreEqual)
+{
+  Feed(LegMsg(0.15f, 0.15f, 0.15f, 0.15f));
+  const Footprint f = GetFootprint();
+  EXPECT_NEAR(f.roll, 0.0, 1e-6);
+  EXPECT_NEAR(f.pitch, 0.0, 1e-6);
+  EXPECT_NEAR(f.yaw, 0.0, 1e-6);
+  EXPECT_NEAR(f.height, 0.06906 + 0.0375, 1e-4);  // 車輪の下がり + 車輪半径
+}
+
+TEST_F(LinkageStatePublisherTest, FootprintRollsRightDownWhenRightLegsAreShallower)
+{
+  // 右脚の下がりが小さい = 右側が低い → REP-103 でロール正。差 0.0462 m / 左右の接地点間 約 0.226 m
+  Feed(LegMsg(0.15f, 1.42f, 0.15f, 1.42f));
+  const Footprint f = GetFootprint();
+  EXPECT_NEAR(f.roll, std::atan2(0.11527 - 0.06906, 0.226), 0.01);
+  EXPECT_NEAR(f.pitch, 0.0, 1e-6);
+  EXPECT_NEAR(f.yaw, 0.0, 1e-6);
+}
+
+TEST_F(LinkageStatePublisherTest, FootprintPitchesFrontDownWhenFrontLegsAreShallower)
+{
+  Feed(LegMsg(0.15f, 0.15f, 1.42f, 1.42f));
+  const Footprint f = GetFootprint();
+  EXPECT_GT(f.pitch, 0.1);  // 前が低い = ピッチ正
+  EXPECT_NEAR(f.roll, 0.0, 1e-6);
+}
+
+TEST_F(LinkageStatePublisherTest, FootprintIsBroadcastOnTf)
+{
+  std::vector<tf2_msgs::msg::TFMessage> tfs;
+  auto sub = node_->create_subscription<tf2_msgs::msg::TFMessage>(
+    "/tf", 10, [&](tf2_msgs::msg::TFMessage::SharedPtr m) {tfs.push_back(*m);});
+  Feed(LegMsg(0.3f, 0.3f, 0.3f, 0.3f));
+  const auto start = std::chrono::steady_clock::now();
+  while (tfs.empty() && std::chrono::steady_clock::now() - start < std::chrono::milliseconds(300)) {
+    rclcpp::spin_some(node_);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_FALSE(tfs.empty());
+  ASSERT_EQ(tfs[0].transforms.size(), 1u);
+  EXPECT_EQ(tfs[0].transforms[0].header.frame_id, "base_footprint");
+  EXPECT_EQ(tfs[0].transforms[0].child_frame_id, "base_link");
+  EXPECT_EQ(tfs[0].transforms[0].header.stamp.sec, 12);
+}
 
 TEST_F(LinkageStatePublisherTest, MixesMotorAndDerivedJoints)
 {
