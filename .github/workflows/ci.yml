@@ -17,6 +17,7 @@ jobs:
             git \
             python3-colcon-common-extensions \
             python3-rosdep \
+            python3-vcstool \
             ros-jazzy-ament-cmake-gtest \
             ros-jazzy-ament-lint-auto \
             ros-jazzy-ament-lint-common
@@ -26,6 +27,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/rabbits_description
+
+      - name: Import dependency repositories
+        shell: bash
+        run: vcs import src < src/rabbits_description/.repos
 
       - name: Install rosdeps
         shell: bash

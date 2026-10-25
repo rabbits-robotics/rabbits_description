@@ -2,7 +2,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import (
-    Command, EqualsSubstitution, FindExecutable, LaunchConfiguration, PathJoinSubstitution)
+    AndSubstitution, Command, EqualsSubstitution, FindExecutable, LaunchConfiguration,
+    NotSubstitution, PathJoinSubstitution)
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -34,14 +35,22 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description}],
     )
 
-    # gamma は脚の派生関節（バー・連結リンク）をミキサーが足すので、GUI の出力はミキサーの入力へ
+    # gamma は脚の派生関節（バー・連結リンク）をミキサーが足すので、GUI の出力はミキサーの入力へ。
+    # 他の機体は GUI が joint_states を直接出す（条件は逆）
     is_gamma = EqualsSubstitution(LaunchConfiguration('robot'), 'gamma')
+    use_gui = LaunchConfiguration('use_gui')
     joint_state_pub_gui_node = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
         output='screen',
+        condition=IfCondition(AndSubstitution(use_gui, NotSubstitution(is_gamma))),
+    )
+    joint_state_pub_gui_gamma_node = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        output='screen',
         remappings=[('joint_states', 'motor_joint_states')],
-        condition=IfCondition(LaunchConfiguration('use_gui')),
+        condition=IfCondition(AndSubstitution(use_gui, is_gamma)),
     )
     linkage_node = Node(
         package='rabbits_description',
@@ -66,6 +75,7 @@ def generate_launch_description():
         use_gui_arg,
         robot_state_pub_node,
         joint_state_pub_gui_node,
+        joint_state_pub_gui_gamma_node,
         linkage_node,
         rviz_node,
     ])
