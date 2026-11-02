@@ -21,7 +21,8 @@ struct FootprintParams
   double leg_azimuth[4];  // 各脚の方位角 [rad]（車体 x から左回り）FR, FL, BR, BL
 };
 
-// linkage.crank_length, crank_angle_zero, coupler_length, bar_length, bar_pivot[2], coupler_pin[2], wheel[2], theta_max
+// linkage.crank_length, crank_angle_zero, coupler_length, bar_length,
+// bar_pivot[2], coupler_pin[2], wheel[2], theta_max
 rabcl::LegLinkageConfig LoadLegLinkage(rclcpp::Node & node);
 
 // LoadLegLinkage + linkage.drop_min, drop_max, tilt_radius, leg_azimuth[4]

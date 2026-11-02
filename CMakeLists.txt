@@ -19,15 +19,16 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(rabcl REQUIRED)
 
-# ライブラリ: gamma_linkage.yaml の読み込み（他パッケージからは rabbits_description::rabbits_description）
+# ライブラリ: gamma_linkage.yaml の読み込みと接地点の計算（他パッケージからは rabbits_description::rabbits_description）
 add_library(rabbits_description SHARED
   src/linkage_params.cpp
+  src/footprint.cpp
 )
 target_include_directories(rabbits_description PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(rabbits_description rclcpp rabcl)
+ament_target_dependencies(rabbits_description rclcpp tf2 rabcl)
 
 # 脚リンクの派生関節を足すミキサー（motor_joint_states → joint_states）
 add_executable(linkage_state_publisher src/linkage_state_publisher.cpp)
@@ -57,7 +58,7 @@ install(
 )
 
 ament_export_targets(export_rabbits_description HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp rabcl)
+ament_export_dependencies(rclcpp tf2 rabcl)
 ament_export_include_directories(include)
 
 if(BUILD_TESTING)
@@ -70,6 +71,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_linkage_params test/test_linkage_params.cpp)
   target_link_libraries(test_linkage_params rabbits_description)
+
+  ament_add_gtest(test_footprint test/test_footprint.cpp)
+  target_link_libraries(test_footprint rabbits_description)
 
   add_library(linkage_state_publisher_lib STATIC src/linkage_state_publisher.cpp)
   target_link_libraries(linkage_state_publisher_lib rabbits_description)

@@ -21,6 +21,7 @@ urdf/
   gamma/gamma.xacro          最上位 + 部品マクロ（body, leg, neck）
 config/gamma_linkage.yaml    gamma の脚リンクと首の寸法（xacro とノードが読む。gamma_turret_fw の robot.hpp と対で更新）
 include/rabbits_description/linkage_params.hpp  gamma_linkage.yaml を ROS パラメータから読むライブラリ（下の「ライブラリ」）
+include/rabbits_description/footprint.hpp        4 輪の接地点と胴体の置き方（base_footprint → base_link）の計算（同上）
 src/linkage_state_publisher.cpp  gamma の派生関節を足すミキサー（motor_joint_states → joint_states）
 meshes/
   proto1/*.dae
@@ -30,7 +31,9 @@ rviz/display.rviz
 
 ## ライブラリ `rabbits_description::rabbits_description`
 
-`config/gamma_linkage.yaml` の `linkage.*` を ROS パラメータから rabcl の設定構造体に読む関数（`include/rabbits_description/linkage_params.hpp`）。ミキサーのほか rabbits_sim（偽ファーム）と rabbits_gui（`imu_footprint_node`）が使い、yaml の読み方を 1 か所にまとめる。
+ミキサーのほか rabbits_sim（偽ファーム）と rabbits_gui（`imu_footprint_node`）が使う共通部分。yaml の読み方と接地点の計算を 1 か所にまとめる。
+
+**`linkage_params.hpp`**: `config/gamma_linkage.yaml` の `linkage.*` を ROS パラメータから rabcl の設定構造体に読む関数。
 
 | 関数 | 読むパラメータ | 返す型 |
 |---|---|---|
@@ -38,7 +41,11 @@ rviz/display.rviz
 | `LoadBodyPosture(node)` | 上 + `drop_min` / `drop_max` / `tilt_radius` / `leg_azimuth` | `rabcl::BodyPostureConfig` |
 | `LoadFootprintParams(node)` | `leg_radius` / `wheel_radius` / `leg_azimuth` | `FootprintParams` |
 
-すべて必須。足りない・型が違う・要素数が違うと `std::invalid_argument`（`what()` にパラメータ名）。未宣言なら `declare_parameter` し、宣言済みなら読むだけなので、同じノードで複数の `Load*` を呼べる。使う側は `package.xml` に `<depend>rabbits_description</depend>`、CMake で `find_package(rabbits_description REQUIRED)` と `target_link_libraries(x rabbits_description::rabbits_description)`。
+すべて必須。足りない・型が違う・要素数が違うと `std::invalid_argument`（`what()` にパラメータ名）。未宣言なら `declare_parameter` し、宣言済みなら読むだけなので、同じノードで複数の `Load*` を呼べる。
+
+**`footprint.hpp`**: 4 輪の接地点（base 座標）と、それを地面 z = 0 に乗せる `base_footprint → base_link` の回転と高さ。`ContactPointsOf(pose[4], FootprintParams)` が接地点（車輪中心の真下 `wheel_radius`）、`PlaneFootprint(c, quat, height)` が 4 輪が同じ平面に接地するとしたときの姿勢（対角線 2 本の外積で法線、4 点の平均で高さ。yaw なし）、`LowestWheelHeight(c, quat)` が与えた姿勢で最も低い接地点が地面に乗る高さ（IMU の姿勢と組み合わせて使う）。
+
+使う側は `package.xml` に `<depend>rabbits_description</depend>`、CMake で `find_package(rabbits_description REQUIRED)` と `target_link_libraries(x rabbits_description::rabbits_description)`。
 
 ## gamma
 
