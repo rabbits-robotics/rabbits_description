@@ -43,6 +43,11 @@ protected:
       rclcpp::Parameter("linkage.theta_max", 1.5707963),
       rclcpp::Parameter("linkage.leg_radius", 0.092),
       rclcpp::Parameter("linkage.wheel_radius", 0.0375),
+      rclcpp::Parameter("linkage.drop_min", 0.06906),
+      rclcpp::Parameter("linkage.drop_max", 0.11527),
+      rclcpp::Parameter("linkage.tilt_radius", 0.164),
+      rclcpp::Parameter(
+        "linkage.leg_azimuth", std::vector<double>{-0.7854, 0.7854, -2.3562, 2.3562}),
       });
     node_ = std::make_shared<LinkageStatePublisher>(options);
     sub_ = node_->create_subscription<JointState>(

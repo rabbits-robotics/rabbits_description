@@ -22,6 +22,7 @@
       drop_max: 0.11527            # 車高 1（θ = 1.42 rad）
       leg_radius: 0.092            # base 原点（脚モータ軸の水平面 × Yaw 軸）から M までの水平距離
       tilt_radius: 0.164           # 車体中心から車輪の接地点まで（r + W.x、中間の車高）
+      leg_azimuth: [-0.7854, 0.7854, -2.3562, 2.3562]   # 各脚の方位角（車体 x から左回り）FR, FL, BR, BL。BodyPosture と接地点の計算が使う
       wheel_radius: 0.0375         # φ75
       wheel_width: 0.013
       yaw_origin_z: -0.0255        # 首 Yaw 原点の高さ（base 原点から）

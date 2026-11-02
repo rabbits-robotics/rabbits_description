@@ -20,12 +20,25 @@ urdf/
   proto1/proto1.xacro        最上位 + 部品マクロ（mobile_base, wheel, turret_base, turret_unit）
   gamma/gamma.xacro          最上位 + 部品マクロ（body, leg, neck）
 config/gamma_linkage.yaml    gamma の脚リンクと首の寸法（xacro とノードが読む。gamma_turret_fw の robot.hpp と対で更新）
+include/rabbits_description/linkage_params.hpp  gamma_linkage.yaml を ROS パラメータから読むライブラリ（下の「ライブラリ」）
 src/linkage_state_publisher.cpp  gamma の派生関節を足すミキサー（motor_joint_states → joint_states）
 meshes/
   proto1/*.dae
   gamma/                     メッシュを書き出したら
 rviz/display.rviz
 ```
+
+## ライブラリ `rabbits_description::rabbits_description`
+
+`config/gamma_linkage.yaml` の `linkage.*` を ROS パラメータから rabcl の設定構造体に読む関数（`include/rabbits_description/linkage_params.hpp`）。ミキサーのほか rabbits_sim（偽ファーム）と rabbits_gui（`imu_footprint_node`）が使い、yaml の読み方を 1 か所にまとめる。
+
+| 関数 | 読むパラメータ | 返す型 |
+|---|---|---|
+| `LoadLegLinkage(node)` | `linkage.crank_length` 〜 `theta_max`（脚リンクの寸法） | `rabcl::LegLinkageConfig` |
+| `LoadBodyPosture(node)` | 上 + `drop_min` / `drop_max` / `tilt_radius` / `leg_azimuth` | `rabcl::BodyPostureConfig` |
+| `LoadFootprintParams(node)` | `leg_radius` / `wheel_radius` / `leg_azimuth` | `FootprintParams` |
+
+すべて必須。足りない・型が違う・要素数が違うと `std::invalid_argument`（`what()` にパラメータ名）。未宣言なら `declare_parameter` し、宣言済みなら読むだけなので、同じノードで複数の `Load*` を呼べる。使う側は `package.xml` に `<depend>rabbits_description</depend>`、CMake で `find_package(rabbits_description REQUIRED)` と `target_link_libraries(x rabbits_description::rabbits_description)`。
 
 ## gamma
 
@@ -36,7 +49,7 @@ rviz/display.rviz
 - リンクのフレームは「z = その関節の回転軸、x = ゼロ姿勢でのリンクの長さ方向」（メッシュの座標系と同じ）。関節の値はゼロ姿勢からの変化分で、正 = 車体が上がる向き（ゼロ姿勢では全関節 0）。ミキサーが出す値は bar = −(φ − φ0)、coupler = −((ψ − α) − (ψ0 − α0))。
 - base 原点は 4 本の脚モータ軸を含む水平面と Yaw 軸の交点（x 前、y 左、z 上）。首 Yaw 原点はその 25.5 mm 下、Pitch / Roll はそこから 126.4 mm 上の同じ点（仮）。
 - pitch / roll は論理関節（ファームが差動リンクの 2 モータ角から求めた値）。ロール軸を後回しにする間は 0 が来て静止する。
-- ミキサーは `base_footprint → base_link` の TF も出す（`publish_footprint`、既定 true）。4 輪の接地点（車輪中心の真下 `wheel_radius`）が地面 z = 0 に乗るように、対角線 2 本の外積で地面の法線、4 点の平均で高さを決める。yaw は含めない（`base_footprint` の x は胴体の前を地面に投影した向き）。rviz の固定フレームは `base_footprint`（display.rviz / bringup の gamma.rviz）なので、車高を上げると胴体が上がり、ロール・ピッチで胴体が傾いて見える。オドメトリ（`map → base_footprint`）は無い。
+- ミキサーは `base_footprint → base_link` の TF も出す（`publish_footprint`、既定 true）。4 輪の接地点（車輪中心の真下 `wheel_radius`。脚の方位角は yaml の `linkage.leg_azimuth`）が地面 z = 0 に乗るように、対角線 2 本の外積で地面の法線、4 点の平均で高さを決める。yaw は含めない（`base_footprint` の x は胴体の前を地面に投影した向き）。rviz の固定フレームは `base_footprint`（display.rviz / bringup の gamma.rviz）なので、車高を上げると胴体が上がり、ロール・ピッチで胴体が傾いて見える。オドメトリ（`map → base_footprint`）は無い。
 - 車輪の回転の向きは、`joint_states` に入る角度（ファーム / 偽ファームの `OmniDrive × WHEEL_SIGN`）をそのまま表す。現状の `WHEEL_SIGN = -1` では前進指令で後ろに転がって見える（rabbits_sim の README「rviz での車輪の向きの読み方」）。
 
 ### gamma のメッシュの座標系（CAD で STL を書き出すときの約束）

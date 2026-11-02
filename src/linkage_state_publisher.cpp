@@ -14,16 +14,6 @@ constexpr const char * DEFAULT_LEG_JOINTS[] = {
 constexpr const char * DEFAULT_PREFIXES[] = {"right_front", "left_front", "right_back",
   "left_back"};
 
-// [x, z] の 2 要素パラメータ
-void LoadPair(rclcpp::Node & node, const std::string & name, float & x, float & z)
-{
-  const std::vector<double> v = node.declare_parameter<std::vector<double>>(name);
-  if (v.size() != 2) {
-    throw std::invalid_argument("parameter '" + name + "' must have 2 values [x, z]");
-  }
-  x = static_cast<float>(v[0]);
-  z = static_cast<float>(v[1]);
-}
 }  // namespace
 
 LinkageStatePublisher::LinkageStatePublisher(const rclcpp::NodeOptions & options)
@@ -32,7 +22,7 @@ LinkageStatePublisher::LinkageStatePublisher(const rclcpp::NodeOptions & options
       "leg_joints", std::vector<std::string>(DEFAULT_LEG_JOINTS, DEFAULT_LEG_JOINTS + LEGS))),
   prefixes_(this->declare_parameter<std::vector<std::string>>(
       "prefixes", std::vector<std::string>(DEFAULT_PREFIXES, DEFAULT_PREFIXES + LEGS))),
-  linkage_(LoadLinkage())
+  linkage_(rabbits_description::LoadLegLinkage(*this))
 {
   if (leg_joints_.size() != LEGS || prefixes_.size() != LEGS) {
     throw std::invalid_argument("leg_joints and prefixes must have 4 entries");
@@ -44,33 +34,12 @@ LinkageStatePublisher::LinkageStatePublisher(const rclcpp::NodeOptions & options
   publish_footprint_ = this->declare_parameter<bool>("publish_footprint", true);
   footprint_frame_ = this->declare_parameter<std::string>("footprint_frame", "base_footprint");
   base_frame_ = this->declare_parameter<std::string>("base_frame", "base_link");
-  leg_radius_ = static_cast<float>(this->declare_parameter<double>("linkage.leg_radius"));
-  wheel_radius_ = static_cast<float>(this->declare_parameter<double>("linkage.wheel_radius"));
-  leg_azimuth_ = this->declare_parameter<std::vector<double>>(
-    "leg_azimuth", std::vector<double>{-M_PI / 4, M_PI / 4, -3 * M_PI / 4, 3 * M_PI / 4});
-  if (leg_azimuth_.size() != LEGS) {
-    throw std::invalid_argument("leg_azimuth must have 4 entries (FR, FL, BR, BL)");
-  }
+  footprint_ = rabbits_description::LoadFootprintParams(*this);
   pub_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
   tf_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
     "motor_joint_states", 10,
     std::bind(&LinkageStatePublisher::JointStateCB, this, std::placeholders::_1));
-}
-
-rabcl::LegLinkageConfig LinkageStatePublisher::LoadLinkage()
-{
-  rabcl::LegLinkageConfig c = {};
-  c.crank_length = static_cast<float>(this->declare_parameter<double>("linkage.crank_length"));
-  c.crank_angle_zero =
-    static_cast<float>(this->declare_parameter<double>("linkage.crank_angle_zero"));
-  c.coupler_length = static_cast<float>(this->declare_parameter<double>("linkage.coupler_length"));
-  c.bar_length = static_cast<float>(this->declare_parameter<double>("linkage.bar_length"));
-  LoadPair(*this, "linkage.bar_pivot", c.bar_pivot_x, c.bar_pivot_z);
-  LoadPair(*this, "linkage.coupler_pin", c.coupler_pin_x, c.coupler_pin_z);
-  LoadPair(*this, "linkage.wheel", c.wheel_x, c.wheel_z);
-  c.theta_max = static_cast<float>(this->declare_parameter<double>("linkage.theta_max"));
-  return c;
 }
 
 void LinkageStatePublisher::JointStateCB(const sensor_msgs::msg::JointState::SharedPtr msg)
@@ -116,10 +85,10 @@ geometry_msgs::msg::TransformStamped LinkageStatePublisher::Footprint() const
   // 接地点（base 座標）: 車輪中心の真下 wheel_radius
   double c[LEGS][3];
   for (size_t i = 0; i < LEGS; ++i) {
-    const double r = leg_radius_ + pose_[i].wheel_x;
-    c[i][0] = r * std::cos(leg_azimuth_[i]);
-    c[i][1] = r * std::sin(leg_azimuth_[i]);
-    c[i][2] = -static_cast<double>(pose_[i].wheel_drop) - wheel_radius_;
+    const double r = footprint_.leg_radius + pose_[i].wheel_x;
+    c[i][0] = r * std::cos(footprint_.leg_azimuth[i]);
+    c[i][1] = r * std::sin(footprint_.leg_azimuth[i]);
+    c[i][2] = -static_cast<double>(pose_[i].wheel_drop) - footprint_.wheel_radius;
   }
   // 地面の法線 = 対角線（FR − BL）×（FL − BR）。上向き（z > 0）に揃える
   const double d1[3] = {c[0][0] - c[3][0], c[0][1] - c[3][1], c[0][2] - c[3][2]};
