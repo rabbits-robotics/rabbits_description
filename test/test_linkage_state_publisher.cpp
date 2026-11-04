@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <string>
@@ -29,10 +30,10 @@ protected:
     rclcpp::shutdown();
   }
 
-  void SetUp() override
+  // gamma の寸法（config/gamma_linkage.yaml と同じ。YAML は読まない）
+  static std::vector<rclcpp::Parameter> GammaOverrides()
   {
-    // gamma の寸法（config/gamma_linkage.yaml と同じ。YAML は読まない）
-    auto options = rclcpp::NodeOptions().parameter_overrides({
+    return {
       rclcpp::Parameter("linkage.crank_length", 0.041),
       rclcpp::Parameter("linkage.crank_angle_zero", 1.0471976),
       rclcpp::Parameter("linkage.coupler_length", 0.03975),
@@ -48,7 +49,12 @@ protected:
       rclcpp::Parameter("linkage.tilt_radius", 0.164),
       rclcpp::Parameter(
         "linkage.leg_azimuth", std::vector<double>{-0.7854, 0.7854, -2.3562, 2.3562}),
-      });
+    };
+  }
+
+  void SetUp() override
+  {
+    auto options = rclcpp::NodeOptions().parameter_overrides(GammaOverrides());
     node_ = std::make_shared<LinkageStatePublisher>(options);
     sub_ = node_->create_subscription<JointState>(
       "joint_states", 10, [this](JointState::SharedPtr msg) {received_.push_back(*msg);});
@@ -175,10 +181,10 @@ TEST_F(LinkageStatePublisherTest, MixesMotorAndDerivedJoints)
     static_cast<float>(M_PI / 2)));
   ASSERT_EQ(received_.size(), 1u);
   const JointState & out = received_[0];
-  ASSERT_EQ(out.name.size(), 13u);
-  EXPECT_EQ(out.position.size(), 13u);
-  EXPECT_EQ(out.velocity.size(), 13u);
-  EXPECT_EQ(out.effort.size(), 13u);
+  ASSERT_EQ(out.name.size(), 15u);  // 入力 5 + 首の 0 埋め 2（pitch, roll）+ 派生 8
+  EXPECT_EQ(out.position.size(), 15u);
+  EXPECT_EQ(out.velocity.size(), 15u);
+  EXPECT_EQ(out.effort.size(), 15u);
   EXPECT_EQ(out.header.stamp.sec, 12);
   EXPECT_EQ(out.header.stamp.nanosec, 34u);
   // 入力はそのまま（順も保つ）
@@ -192,8 +198,8 @@ TEST_F(LinkageStatePublisherTest, MixesMotorAndDerivedJoints)
   EXPECT_NEAR(Get(out, "left_front_bar_joint"), 0.4821 - 0.2073, 1e-3);   // θ = π/6
   EXPECT_NEAR(Get(out, "right_back_bar_joint"), 0.4821 + 0.1260, 1e-3);   // θ = π/3
   EXPECT_NEAR(Get(out, "left_back_coupler_joint"), -(2.4496 - 1.2593), 1e-3);  // θ = π/2（クランクに対して上向きに回る = 負）
-  EXPECT_DOUBLE_EQ(out.velocity[12], 0.0);
-  EXPECT_DOUBLE_EQ(out.effort[12], 0.0);
+  EXPECT_DOUBLE_EQ(out.velocity[14], 0.0);
+  EXPECT_DOUBLE_EQ(out.effort[14], 0.0);
 }
 
 TEST_F(LinkageStatePublisherTest, PassesThroughJointStatesWithoutLegs)
@@ -204,7 +210,7 @@ TEST_F(LinkageStatePublisherTest, PassesThroughJointStatesWithoutLegs)
   Feed(m);
   ASSERT_EQ(received_.size(), 1u);
   const JointState & out = received_[0];
-  ASSERT_EQ(out.name.size(), 9u);
+  ASSERT_EQ(out.name.size(), 11u);  // 入力 1 + 首の 0 埋め 2 + 派生 8
   EXPECT_EQ(out.velocity.size(), 0u);  // 入力に無い配列は足さない
   EXPECT_NEAR(Get(out, "right_front_bar_joint"), 0.0, 1e-3);  // Forward(0) の姿勢 = ゼロ
 }
@@ -217,4 +223,53 @@ TEST_F(LinkageStatePublisherTest, KeepsLastPoseWhenOutOfRange)
   Feed(LegMsg(3.3f, 3.3f, 3.3f, 3.3f));  // 解けない θ
   ASSERT_EQ(received_.size(), 2u);
   EXPECT_DOUBLE_EQ(Get(received_[1], "right_front_bar_joint"), bar);
+}
+
+TEST_F(LinkageStatePublisherTest, FillsMissingNeckJointsWithZero)
+{
+  JointState in = LegMsg(0.5f, 0.5f, 0.5f, 0.5f);  // yaw_joint は入っている、pitch / roll は無い
+  Feed(in);
+  ASSERT_FALSE(received_.empty());
+  const JointState & out = received_.back();
+  auto idx = [&](const std::string & n) {
+      return std::find(out.name.begin(), out.name.end(), n) - out.name.begin();
+    };
+  ASSERT_LT(idx("pitch_joint"), static_cast<long>(out.name.size()));
+  ASSERT_LT(idx("roll_joint"), static_cast<long>(out.name.size()));
+  EXPECT_DOUBLE_EQ(out.position[idx("pitch_joint")], 0.0);
+  EXPECT_DOUBLE_EQ(out.velocity[idx("roll_joint")], 0.0);
+  EXPECT_DOUBLE_EQ(out.effort[idx("roll_joint")], 0.0);
+  EXPECT_EQ(out.name.size(), out.position.size());
+  EXPECT_EQ(out.name.size(), out.velocity.size());
+  EXPECT_EQ(out.name.size(), out.effort.size());
+}
+
+TEST_F(LinkageStatePublisherTest, DoesNotDuplicateJointsPresentInInput)
+{
+  JointState in = LegMsg(0.5f, 0.5f, 0.5f, 0.5f);  // yaw_joint = 0.7 入り
+  Feed(in);
+  ASSERT_FALSE(received_.empty());
+  const JointState & out = received_.back();
+  EXPECT_EQ(std::count(out.name.begin(), out.name.end(), "yaw_joint"), 1);
+  const auto i = std::find(out.name.begin(), out.name.end(), "yaw_joint") - out.name.begin();
+  EXPECT_DOUBLE_EQ(out.position[i], 0.7);
+}
+
+TEST_F(LinkageStatePublisherTest, FillZeroJointsCanBeEmptied)
+{
+  auto overrides = GammaOverrides();
+  overrides.emplace_back("fill_zero_joints", std::vector<std::string>{});
+  auto options = rclcpp::NodeOptions().parameter_overrides(overrides);
+  auto node = std::make_shared<LinkageStatePublisher>(options);
+  std::vector<JointState> got;
+  auto sub = node->create_subscription<JointState>(
+    "joint_states", 10, [&](JointState::SharedPtr m) {got.push_back(*m);});
+  node->JointStateCB(std::make_shared<JointState>(LegMsg(0.5f, 0.5f, 0.5f, 0.5f)));
+  const auto start = std::chrono::steady_clock::now();
+  while (got.empty() && std::chrono::steady_clock::now() - start < std::chrono::milliseconds(300)) {
+    rclcpp::spin_some(node);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  ASSERT_FALSE(got.empty());
+  EXPECT_EQ(got[0].name.size(), 13u);  // 入力 5 + 派生 8 のみ
 }

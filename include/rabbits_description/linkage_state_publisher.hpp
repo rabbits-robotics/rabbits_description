@@ -20,6 +20,8 @@
 // URDF の関節は z 軸回りで正 = 車体が上がる向き（φ、ψ − α の上向き正と逆）。値はゼロ姿勢からの変化分:
 //   bar = −(φ − φ0)、coupler = −((ψ − α) − (ψ0 − α0))。ゼロ姿勢では全関節が 0。
 // 脚の無いメッセージでも直前の姿勢で派生分を足す。Forward が解けない脚は直前の値を保つ。
+// fill_zero_joints（既定: 首の yaw / pitch / roll）のうち入力に無い関節は 0 で足す。首のモータが未接続でも
+// TF の鎖（imu_link, camera_link）が切れないようにするため。
 // 寸法は linkage.* パラメータ（config/gamma_linkage.yaml。読み込みは linkage_params.hpp）。
 // あわせて base_footprint → base_link の TF を出す（publish_footprint）: 4 輪の接地点（車輪中心の真下 wheel_radius）が
 // 地面 z = 0 に乗るように、対角線 2 本の外積で地面の法線、4 点の平均で高さを決める。yaw は含めない
@@ -46,6 +48,7 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr sub_;
   std::vector<std::string> leg_joints_;
   std::vector<std::string> prefixes_;
+  std::vector<std::string> fill_zero_joints_;
   rabcl::LegLinkage linkage_;
   rabcl::LegPose pose_[LEGS];
   rabcl::LegPose zero_ = {};  // ゼロ姿勢（θ = 0）

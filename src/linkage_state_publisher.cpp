@@ -1,5 +1,6 @@
 #include "rabbits_description/linkage_state_publisher.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -14,6 +15,7 @@ constexpr const char * DEFAULT_LEG_JOINTS[] = {
   "right_front_leg_joint", "left_front_leg_joint", "right_back_leg_joint", "left_back_leg_joint"};
 constexpr const char * DEFAULT_PREFIXES[] = {"right_front", "left_front", "right_back",
   "left_back"};
+constexpr const char * DEFAULT_FILL_ZERO_JOINTS[] = {"yaw_joint", "pitch_joint", "roll_joint"};
 
 }  // namespace
 
@@ -36,6 +38,9 @@ LinkageStatePublisher::LinkageStatePublisher(const rclcpp::NodeOptions & options
   footprint_frame_ = this->declare_parameter<std::string>("footprint_frame", "base_footprint");
   base_frame_ = this->declare_parameter<std::string>("base_frame", "base_link");
   footprint_ = rabbits_description::LoadFootprintParams(*this);
+  fill_zero_joints_ = this->declare_parameter<std::vector<std::string>>(
+    "fill_zero_joints",
+    std::vector<std::string>(DEFAULT_FILL_ZERO_JOINTS, DEFAULT_FILL_ZERO_JOINTS + 3));
   pub_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
   tf_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
   sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
@@ -59,6 +64,20 @@ void LinkageStatePublisher::JointStateCB(const sensor_msgs::msg::JointState::Sha
   }
   const bool has_velocity = !msg->velocity.empty();
   const bool has_effort = !msg->effort.empty();
+  // 入力に無い首関節を 0 で埋める（TF の鎖を切らない）
+  for (const std::string & name : fill_zero_joints_) {
+    if (std::find(msg->name.begin(), msg->name.end(), name) != msg->name.end()) {
+      continue;
+    }
+    out.name.push_back(name);
+    out.position.push_back(0.0);
+    if (has_velocity) {
+      out.velocity.push_back(0.0);
+    }
+    if (has_effort) {
+      out.effort.push_back(0.0);
+    }
+  }
   for (size_t i = 0; i < LEGS; ++i) {
     // URDF の関節は正 = 車体が上がる向き（φ、ψ − α と逆）で、ゼロ姿勢からの変化分
     out.name.push_back(prefixes_[i] + "_bar_joint");
