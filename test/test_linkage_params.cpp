@@ -158,3 +158,17 @@ TEST_F(LinkageParamsTest, WrongTypeThrowsWithName)
     EXPECT_NE(std::string(e.what()).find("linkage.theta_max"), std::string::npos) << e.what();
   }
 }
+
+TEST_F(LinkageParamsTest, AlreadyDeclaredWithWrongTypeThrowsWithName)
+{
+  auto params = GammaParams();
+  params.erase("linkage.theta_max");  // override を外し、同名を先に別の型で宣言する
+  auto node = std::make_shared<rclcpp::Node>("t", Options(params));
+  node->declare_parameter<std::string>("linkage.theta_max", "x");
+  try {
+    rabbits_description::LoadLegLinkage(*node);
+    FAIL() << "expected std::invalid_argument";
+  } catch (const std::invalid_argument & e) {
+    EXPECT_NE(std::string(e.what()).find("linkage.theta_max"), std::string::npos) << e.what();
+  }
+}
